@@ -12,7 +12,7 @@ SessionLocal = sessionmaker(
 )
 
 
-def get_db_session() -> Generator[Session, None, None]:
+def get_db_session() -> Generator[Session]:
     """Provides a transactional database session for context management.
 
     Yields:

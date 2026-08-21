@@ -50,11 +50,7 @@ class SQLAlchemyUserRepository(UserRepository):
         Returns:
             UserModel | None: The matching user model instance if found, or None.
         """
-        return (
-            self._session.query(UserModel)
-            .filter(UserModel.id == user_id)
-            .first()
-        )
+        return self._session.query(UserModel).filter(UserModel.id == user_id).first()
 
     def find_by_email(self, email: str) -> UserModel | None:
         """Finds a user entity by its unique email address.
@@ -65,11 +61,7 @@ class SQLAlchemyUserRepository(UserRepository):
         Returns:
             UserModel | None: The matching user model instance if found, or None.
         """
-        return (
-            self._session.query(UserModel)
-            .filter(UserModel.email == email)
-            .first()
-        )
+        return self._session.query(UserModel).filter(UserModel.email == email).first()
 
     def update(self, user: UserModel) -> UserModel:
         """Updates an existing user entity in the database.

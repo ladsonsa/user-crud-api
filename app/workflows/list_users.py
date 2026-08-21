@@ -6,14 +6,16 @@ class ListUsersWorkflow:
     """Workflow component that handles the business logic for retrieving all users.
 
     Attributes:
-        _repository (UserRepository): Repository instance used for user data persistence operations.
+        _repository (UserRepository): Repository instance used for user data
+        persistence operations.
     """
 
     def __init__(self, repository: UserRepository) -> None:
         """Initializes the workflow with a user repository instance.
 
         Args:
-            repository (UserRepository): The repository implementation to use for user data persistence.
+            repository (UserRepository): The repository implementation to use for user
+            data persistence.
         """
         self._repository = repository
 

@@ -1,3 +1,5 @@
+from typing import Annotated
+
 from fastapi import APIRouter, Depends, status
 from sqlalchemy.orm import Session
 
@@ -8,6 +10,7 @@ from app.dtos.user_response import UserResponseDTO
 from app.dtos.user_update import UserUpdateDTO
 
 router = APIRouter(prefix="/api/v1/users", tags=["Users"])
+SessionDep = Annotated[Session, Depends(get_db_session)]
 
 
 @router.post(
@@ -17,7 +20,7 @@ router = APIRouter(prefix="/api/v1/users", tags=["Users"])
 )
 def create_user(
     data: UserCreateDTO,
-    session: Session = Depends(get_db_session),
+    session: SessionDep,
 ) -> UserResponseDTO:
     """Handles the endpoint to register a new user in the system.
 
@@ -37,7 +40,7 @@ def create_user(
     response_model=list[UserResponseDTO],
 )
 def list_users(
-    session: Session = Depends(get_db_session),
+    session: SessionDep,
 ) -> list[UserResponseDTO]:
     """Handles the endpoint to retrieve all registered users.
 
@@ -57,7 +60,7 @@ def list_users(
 )
 def get_user(
     user_id: int,
-    session: Session = Depends(get_db_session),
+    session: SessionDep,
 ) -> UserResponseDTO:
     """Handles the endpoint to retrieve a single user by their unique identifier.
 
@@ -79,7 +82,7 @@ def get_user(
 def update_user(
     user_id: int,
     data: UserUpdateDTO,
-    session: Session = Depends(get_db_session),
+    session: SessionDep,
 ) -> UserResponseDTO:
     """Handles the endpoint to update an existing user's information.
 
@@ -94,13 +97,14 @@ def update_user(
     controller = get_user_controller(session)
     return controller.update_user(user_id, data)
 
+
 @router.delete(
     "/{user_id}",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 def delete_user(
     user_id: int,
-    session: Session = Depends(get_db_session),
+    session: SessionDep,
 ) -> None:
     """Handles the endpoint to remove a user from the system by their unique identifier.
 

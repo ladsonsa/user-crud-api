@@ -1,7 +1,6 @@
 from sqlalchemy.orm import Session
 
 from app.controllers.user_controller import UserController
-from app.database.session import get_db_session
 from app.repositories.sqlalchemy_user_repository import SQLAlchemyUserRepository
 from app.services.user_service import UserService
 from app.workflows.create_user import CreateUserWorkflow

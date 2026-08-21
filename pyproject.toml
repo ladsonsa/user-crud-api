@@ -1,0 +1,57 @@
+[project]
+name = "user-crud-api"
+version = "0.1.0"
+description = "A layered User CRUD REST API built with FastAPI, SQLAlchemy, and PostgreSQL."
+authors = [
+    {name = "Ládson Sá",email = "123712890+PreGUU@users.noreply.github.com"}
+]
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "fastapi (>=0.141.1,<0.142.0)",
+    "uvicorn (>=0.52.4,<0.53.0)",
+    "sqlalchemy (>=2.0.52,<3.0.0)",
+    "pydantic-settings (>=2.15.0,<3.0.0)",
+    "email-validator (>=2.3.0,<3.0.0)",
+    "psycopg[binary] (>=3.3.4,<4.0.0)"
+]
+
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[dependency-groups]
+dev = [
+    "black (>=26.5.1,<27.0.0)",
+    "ruff (>=0.16.3,<0.17.0)",
+    "pytest (>=9.1.1,<10.0.0)",
+    "pytest-cov (>=7.1.0,<8.0.0)",
+    "coverage (>=7.15.4,<8.0.0)"
+]
+
+[tool.black]
+line-length = 88
+target-version = ["py314"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py314"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+
+[tool.coverage.run]
+source = ["app"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+fail_under = 80

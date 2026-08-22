@@ -1,3 +1,4 @@
+from app.exceptions.user_exceptions import UserNotFoundError
 from app.models.user_model import UserModel
 from app.repositories.user_repository import UserRepository
 
@@ -27,11 +28,11 @@ class GetUserWorkflow:
             UserModel: The matching user model instance.
 
         Raises:
-            ValueError: If no user with the specified identifier is found.
+            UserNotFoundError: If no user with the specified identifier is found.
         """
         user = self._repository.find_by_id(user_id)
 
         if user is None:
-            raise ValueError("User not found")
+            raise UserNotFoundError()
 
         return user

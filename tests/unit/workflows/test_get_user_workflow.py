@@ -1,14 +1,13 @@
 import pytest
 
-from app.dtos.user_create import UserCreateDTO
-from app.exceptions.user_exceptions import DuplicateUserEmailError
+from app.exceptions.user_exceptions import UserNotFoundError
 from app.models.user_model import UserModel
 from app.repositories.user_repository import UserRepository
-from app.workflows.create_user import CreateUserWorkflow
+from app.workflows.get_user import GetUserWorkflow
 
 
 class FakeUserRepository(UserRepository):
-    """In-memory mock repository implementation for testing user operations.
+    """In-memory mock repository implementation for testing user fetch operations.
 
     Attributes:
         users (list[UserModel]): Internal list storing persisted user instances.
@@ -19,15 +18,14 @@ class FakeUserRepository(UserRepository):
         self.users: list[UserModel] = []
 
     def create(self, user: UserModel) -> UserModel:
-        """Simulates user creation by assigning an ID and appending to the list.
+        """Simulates user creation by appending to the list.
 
         Args:
             user (UserModel): The user entity instance to store.
 
         Returns:
-            UserModel: The stored user entity with an assigned ID.
+            UserModel: The stored user entity.
         """
-        user.id = len(self.users) + 1
         self.users.append(user)
         return user
 
@@ -81,46 +79,29 @@ class FakeUserRepository(UserRepository):
         self.users.remove(user)
 
 
-def test_create_user_success() -> None:
-    """Tests successful user creation workflow execution with valid input data."""
+def test_get_user_success() -> None:
+    """Tests successful retrieval of an existing user by identifier."""
     repository = FakeUserRepository()
-    workflow = CreateUserWorkflow(repository)
 
-    data = UserCreateDTO(
-        name="Alice",
-        email="alice@example.com",
-    )
+    user = UserModel(name="Alice", email="alice@example.com")
+    user.id = 1
+    repository.users.append(user)
 
-    user = workflow.execute(data)
+    workflow = GetUserWorkflow(repository)
 
-    assert user.id == 1
-    assert user.name == "Alice"
-    assert user.email == "alice@example.com"
-    assert len(repository.users) == 1
+    result = workflow.execute(1)
+
+    assert result.id == 1
+    assert result.name == "Alice"
 
 
-def test_create_user_duplicate_email() -> None:
-    """Tests that the user creation workflow raises DuplicateUserEmailError when given an existing email.
+def test_get_user_not_found() -> None:
+    """Tests that GetUserWorkflow raises UserNotFoundError when given a non-existent ID.
 
     Raises:
-        DuplicateUserEmailError: Expected exception when attempting to create a user with a duplicate email.
+        UserNotFoundError: Expected exception when attempting to fetch a missing user.
     """
-    repository = FakeUserRepository()
-    workflow = CreateUserWorkflow(repository)
+    workflow = GetUserWorkflow(FakeUserRepository())
 
-    existing_user = UserModel(
-        name="Alice",
-        email="alice@example.com",
-    )
-    existing_user.id = 1
-    repository.users.append(existing_user)
-
-    data = UserCreateDTO(
-        name="Bob",
-        email="alice@example.com",
-    )
-
-    with pytest.raises(DuplicateUserEmailError):
-        workflow.execute(data)
-
-    assert len(repository.users) == 1
+    with pytest.raises(UserNotFoundError):
+        workflow.execute(999)

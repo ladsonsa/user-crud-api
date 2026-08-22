@@ -1,4 +1,5 @@
 from app.dtos.user_create import UserCreateDTO
+from app.exceptions.user_exceptions import DuplicateUserEmailError
 from app.models.user_model import UserModel
 from app.repositories.user_repository import UserRepository
 
@@ -30,12 +31,12 @@ class CreateUserWorkflow:
             UserModel: The newly created and persisted user model instance.
 
         Raises:
-            ValueError: If a user with the specified email already exists.
+            DuplicateUserEmailError: If a user with the specified email already exists.
         """
         existing_user = self._repository.find_by_email(data.email)
 
         if existing_user is not None:
-            raise ValueError("Email already exists")
+            raise DuplicateUserEmailError()
 
         user = UserModel(
             name=data.name,

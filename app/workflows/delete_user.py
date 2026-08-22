@@ -1,3 +1,4 @@
+from app.exceptions.user_exceptions import UserNotFoundError
 from app.repositories.user_repository import UserRepository
 
 
@@ -23,11 +24,11 @@ class DeleteUserWorkflow:
             user_id (int): The unique identifier of the user to delete.
 
         Raises:
-            ValueError: If no user with the specified identifier is found.
+            UserNotFoundError: If no user with the specified identifier is found.
         """
         user = self._repository.find_by_id(user_id)
 
         if user is None:
-            raise ValueError("User not found")
+            raise UserNotFoundError()
 
         self._repository.delete(user)

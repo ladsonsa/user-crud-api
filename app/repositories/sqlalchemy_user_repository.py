@@ -1,5 +1,7 @@
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
+from app.exceptions.user_exceptions import DatabaseOperationError
 from app.models.user_model import UserModel
 from app.repositories.user_repository import UserRepository
 
@@ -20,18 +22,25 @@ class SQLAlchemyUserRepository(UserRepository):
         self._session = session
 
     def create(self, user: UserModel) -> UserModel:
-        """Persists a new user entity in the database.
+        """Persists a new user record in the database.
 
         Args:
-            user (UserModel): The user model instance to be created.
+            user (UserModel): The user entity instance to be created.
 
         Returns:
-            UserModel: The newly created user model instance with updated database state.
+            UserModel: The refreshed user entity instance after successful persistence.
+
+        Raises:
+            DatabaseOperationError: If a database failure occurs during execution.
         """
-        self._session.add(user)
-        self._session.commit()
-        self._session.refresh(user)
-        return user
+        try:
+            self._session.add(user)
+            self._session.commit()
+            self._session.refresh(user)
+            return user
+        except SQLAlchemyError as exc:
+            self._session.rollback()
+            raise DatabaseOperationError() from exc
 
     def list(self) -> list[UserModel]:
         """Retrieves all user entities from the database.
@@ -64,23 +73,37 @@ class SQLAlchemyUserRepository(UserRepository):
         return self._session.query(UserModel).filter(UserModel.email == email).first()
 
     def update(self, user: UserModel) -> UserModel:
-        """Updates an existing user entity in the database.
+        """Persists updates to an existing user record in the database.
 
         Args:
-            user (UserModel): The user model instance with updated attributes.
+            user (UserModel): The modified user entity instance to be updated.
 
         Returns:
-            UserModel: The refreshed user model instance reflecting updated database state.
+            UserModel: The refreshed user entity instance after committing changes.
+
+        Raises:
+            DatabaseOperationError: If a database failure occurs during execution.
         """
-        self._session.commit()
-        self._session.refresh(user)
-        return user
+        try:
+            self._session.commit()
+            self._session.refresh(user)
+            return user
+        except SQLAlchemyError as exc:
+            self._session.rollback()
+            raise DatabaseOperationError() from exc
 
     def delete(self, user: UserModel) -> None:
-        """Deletes a user entity from the database.
+        """Removes a user record from the database.
 
         Args:
-            user (UserModel): The user model instance to be removed.
+            user (UserModel): The user entity instance to be deleted.
+
+        Raises:
+            DatabaseOperationError: If a database failure occurs during execution.
         """
-        self._session.delete(user)
-        self._session.commit()
+        try:
+            self._session.delete(user)
+            self._session.commit()
+        except SQLAlchemyError as exc:
+            self._session.rollback()
+            raise DatabaseOperationError() from exc

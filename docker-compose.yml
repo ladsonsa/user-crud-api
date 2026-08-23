@@ -1,15 +1,13 @@
 # ==============================================================================
 # @file         docker-compose.yml
 # @description  Development environment for the User CRUD API.
-#               Runs FastAPI with live reload and PostgreSQL 17.
 # ==============================================================================
 
 services:
   api:
-    build:
-      context: .
-      target: dev
+    build: .
     container_name: user-crud-api
+
     restart: unless-stopped
 
     ports:
@@ -42,6 +40,7 @@ services:
   postgres:
     image: postgres:17
     container_name: user-crud-postgres
+
     restart: unless-stopped
 
     environment:

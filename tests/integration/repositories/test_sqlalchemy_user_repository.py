@@ -137,7 +137,7 @@ def test_repository_create_duplicate_email() -> None:
         session.close()
 
 
-def test_repository_create_database_error_rolls_back() -> None:
+def test_repository_create_duplicate_email_raises_error() -> None:
     """Tests that an integrity error during user creation raises DuplicateUserEmailError and maintains session state.
 
     Raises:

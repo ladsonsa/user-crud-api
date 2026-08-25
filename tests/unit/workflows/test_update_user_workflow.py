@@ -112,12 +112,12 @@ def test_update_user_not_found() -> None:
 
     with pytest.raises(UserNotFoundError):
         workflow.execute(
-        999,
-        UserUpdateDTO(
-            name="Test",
-            email="test@example.com",
-        ),
-    )
+            999,
+            UserUpdateDTO(
+                name="Test",
+                email="test@example.com",
+            ),
+        )
 
 
 def test_update_user_duplicate_email() -> None:
@@ -139,10 +139,10 @@ def test_update_user_duplicate_email() -> None:
     workflow = UpdateUserWorkflow(repository)
 
     with pytest.raises(DuplicateUserEmailError):
-            workflow.execute(
-        2,
-        UserUpdateDTO(
-            name="Bob",
-            email="alice@example.com",
-        ),
-    )
+        workflow.execute(
+            2,
+            UserUpdateDTO(
+                name="Bob",
+                email="alice@example.com",
+            ),
+        )

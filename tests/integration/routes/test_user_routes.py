@@ -94,3 +94,21 @@ def test_delete_user() -> None:
     response = client.get(f"/api/v1/users/{created['id']}")
 
     assert response.status_code == 404
+
+def test_update_user_with_empty_payload() -> None:
+    """Tests that an empty update payload is rejected by the API."""
+
+    created = client.post(
+        "/api/v1/users",
+        json={
+            "name": "Eve",
+            "email": "eve.routes@example.com",
+        },
+    ).json()
+
+    response = client.put(
+        f"/api/v1/users/{created['id']}",
+        json={},
+    )
+
+    assert response.status_code == 422

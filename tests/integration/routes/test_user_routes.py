@@ -1,3 +1,5 @@
+from concurrent.futures import ThreadPoolExecutor
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -212,3 +214,28 @@ def test_delete_user_not_found() -> None:
     response = client.delete("/api/v1/users/999999")
 
     assert response.status_code == 404
+
+
+def test_create_user_concurrent_duplicate_email() -> None:
+    """Tests race conditions when creating users concurrently with identical email addresses."""
+
+    def create_user() -> int:
+        """Sends a POST request to create a user with a duplicate email payload.
+
+        Returns:
+            int: The HTTP status code returned by the API server.
+        """
+        response = client.post(
+            "/api/v1/users",
+            json={
+                "name": "Concurrent User",
+                "email": "concurrent@example.com",
+            },
+        )
+
+        return response.status_code
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        results = list(executor.map(lambda _: create_user(), range(2)))
+
+    assert sorted(results) == [201, 409]

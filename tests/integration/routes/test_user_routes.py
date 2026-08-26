@@ -1,3 +1,6 @@
+from concurrent.futures import ThreadPoolExecutor
+
+import pytest
 from fastapi.testclient import TestClient
 
 from app.database.init_db import init_database
@@ -20,8 +23,7 @@ def test_create_user() -> None:
             "email": "alice.routes@example.com",
         },
     )
-    print(response.status_code)
-    print(response.json())
+
     assert response.status_code == 201
 
     data = response.json()
@@ -94,3 +96,146 @@ def test_delete_user() -> None:
     response = client.get(f"/api/v1/users/{created['id']}")
 
     assert response.status_code == 404
+
+
+def test_update_user_with_empty_payload() -> None:
+    """Tests that an empty update payload is rejected by the API."""
+
+    created = client.post(
+        "/api/v1/users",
+        json={
+            "name": "Eve",
+            "email": "eve.routes@example.com",
+        },
+    ).json()
+
+    response = client.put(
+        f"/api/v1/users/{created['id']}",
+        json={},
+    )
+
+    assert response.status_code == 422
+
+
+def test_create_user_duplicate_email() -> None:
+    payload = {
+        "name": "Duplicate",
+        "email": "duplicate.routes@example.com",
+    }
+
+    first_response = client.post("/api/v1/users", json=payload)
+    second_response = client.post("/api/v1/users", json=payload)
+
+    assert first_response.status_code == 201
+    assert second_response.status_code == 409
+
+
+@pytest.mark.parametrize(
+    "payload",
+    [
+        {"email": "missing-name@example.com"},
+        {"name": "Missing Email"},
+        {"name": None, "email": "null-name@example.com"},
+        {"name": "Null Email", "email": None},
+        {"name": "", "email": "empty-name@example.com"},
+        {"name": "Invalid Email", "email": "invalid-email"},
+        {"name": 123, "email": "invalid-type@example.com"},
+        {
+            "name": "Extra Field",
+            "email": "extra-field@example.com",
+            "extra": "forbidden",
+        },
+        {
+            "name": "A" * 101,
+            "email": "long-name@example.com",
+        },
+    ],
+)
+def test_create_user_invalid_payload(payload: dict[str, object]) -> None:
+    response = client.post("/api/v1/users", json=payload)
+
+    assert response.status_code == 422
+
+
+def test_get_user_not_found() -> None:
+    response = client.get("/api/v1/users/999999")
+
+    assert response.status_code == 404
+
+
+@pytest.mark.parametrize("user_id", ["invalid", "abc", "1.5"])
+def test_get_user_invalid_id(user_id: str) -> None:
+    response = client.get(f"/api/v1/users/{user_id}")
+
+    assert response.status_code == 422
+
+
+def test_update_user_duplicate_email() -> None:
+    first = client.post(
+        "/api/v1/users",
+        json={
+            "name": "First",
+            "email": "first.update@example.com",
+        },
+    ).json()
+
+    second = client.post(
+        "/api/v1/users",
+        json={
+            "name": "Second",
+            "email": "second.update@example.com",
+        },
+    ).json()
+
+    response = client.put(
+        f"/api/v1/users/{second['id']}",
+        json={
+            "name": "Second Updated",
+            "email": first["email"],
+        },
+    )
+
+    assert response.status_code == 409
+
+
+def test_update_user_not_found() -> None:
+    response = client.put(
+        "/api/v1/users/999999",
+        json={
+            "name": "Not Found",
+            "email": "not-found.update@example.com",
+        },
+    )
+
+    assert response.status_code == 404
+
+
+def test_delete_user_not_found() -> None:
+    response = client.delete("/api/v1/users/999999")
+
+    assert response.status_code == 404
+
+
+def test_create_user_concurrent_duplicate_email() -> None:
+    """Tests race conditions when creating users concurrently with identical email addresses."""
+
+    def create_user() -> int:
+        """Sends a POST request to create a user with a duplicate email payload.
+
+        Returns:
+            int: The HTTP status code returned by the API server.
+        """
+        response = client.post(
+            "/api/v1/users",
+            json={
+                "name": "Concurrent User",
+                "email": "concurrent@example.com",
+            },
+        )
+
+        return response.status_code
+
+    with ThreadPoolExecutor(max_workers=2) as executor:
+        results = list(executor.map(lambda _: create_user(), range(2)))
+
+    assert sorted(results) == [201, 409]

@@ -1,7 +1,10 @@
-from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 from sqlalchemy.orm import Session
 
-from app.exceptions.user_exceptions import DatabaseOperationError
+from app.exceptions.user_exceptions import (
+    DatabaseOperationError,
+    DuplicateUserEmailError,
+)
 from app.models.user_model import UserModel
 from app.repositories.user_repository import UserRepository
 
@@ -31,44 +34,49 @@ class SQLAlchemyUserRepository(UserRepository):
             UserModel: The refreshed user entity instance after successful persistence.
 
         Raises:
-            DatabaseOperationError: If a database failure occurs during execution.
+            DuplicateUserEmailError: If the email uniqueness constraint is violated.
+            DatabaseOperationError: If a general database failure occurs during execution.
         """
         try:
             self._session.add(user)
             self._session.commit()
             self._session.refresh(user)
+
             return user
+        except IntegrityError as exc:
+            self._session.rollback()
+            raise DuplicateUserEmailError from exc
         except SQLAlchemyError as exc:
             self._session.rollback()
-            raise DatabaseOperationError() from exc
+            raise DatabaseOperationError from exc
 
     def list(self) -> list[UserModel]:
-        """Retrieves all user entities from the database.
+        """Retrieves all user records from the database.
 
         Returns:
-            list[UserModel]: A list containing all retrieved user model instances.
+            list[UserModel]: A list of all persisted user model instances.
         """
         return self._session.query(UserModel).all()
 
     def find_by_id(self, user_id: int) -> UserModel | None:
-        """Finds a user entity by its unique identifier.
+        """Finds a user record by its unique identifier.
 
         Args:
             user_id (int): The unique identifier of the user to search for.
 
         Returns:
-            UserModel | None: The matching user model instance if found, or None.
+            UserModel | None: The matching user model instance if found, None otherwise.
         """
         return self._session.query(UserModel).filter(UserModel.id == user_id).first()
 
     def find_by_email(self, email: str) -> UserModel | None:
-        """Finds a user entity by its unique email address.
+        """Finds a user record by its unique email address.
 
         Args:
             email (str): The email address of the user to search for.
 
         Returns:
-            UserModel | None: The matching user model instance if found, or None.
+            UserModel | None: The matching user model instance if found, None otherwise.
         """
         return self._session.query(UserModel).filter(UserModel.email == email).first()
 
@@ -82,15 +90,21 @@ class SQLAlchemyUserRepository(UserRepository):
             UserModel: The refreshed user entity instance after committing changes.
 
         Raises:
-            DatabaseOperationError: If a database failure occurs during execution.
+            DuplicateUserEmailError: If updating the user violates unique email constraints.
+            DatabaseOperationError: If a general database failure occurs during execution.
         """
         try:
             self._session.commit()
             self._session.refresh(user)
+
             return user
+        except IntegrityError as exc:
+            self._session.rollback()
+            raise DuplicateUserEmailError from exc
+
         except SQLAlchemyError as exc:
             self._session.rollback()
-            raise DatabaseOperationError() from exc
+            raise DatabaseOperationError from exc
 
     def delete(self, user: UserModel) -> None:
         """Removes a user record from the database.
@@ -99,11 +113,16 @@ class SQLAlchemyUserRepository(UserRepository):
             user (UserModel): The user entity instance to be deleted.
 
         Raises:
-            DatabaseOperationError: If a database failure occurs during execution.
+            DuplicateUserEmailError: If deletion violates database integrity constraints.
+            DatabaseOperationError: If a general database failure occurs during execution.
         """
         try:
             self._session.delete(user)
             self._session.commit()
+        except IntegrityError as exc:
+            self._session.rollback()
+            raise DuplicateUserEmailError from exc
+
         except SQLAlchemyError as exc:
             self._session.rollback()
-            raise DatabaseOperationError() from exc
+            raise DatabaseOperationError from exc

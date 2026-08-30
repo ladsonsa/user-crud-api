@@ -1,6 +1,6 @@
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, status
+from fastapi import APIRouter, Depends, Path, status
 from sqlalchemy.orm import Session
 
 from app.config.dependencies import get_user_controller
@@ -59,14 +59,14 @@ def list_users(
     response_model=UserResponseDTO,
 )
 def get_user(
-    user_id: int,
+    user_id: Annotated[int, Path(gt=0, le=2147483647)],
     session: SessionDep,
 ) -> UserResponseDTO:
     """Handles the endpoint to retrieve a single user by their unique identifier.
 
     Args:
         user_id (int): The unique identifier of the user to fetch.
-        session (Session, optional): The database session supplied by the dependency.
+        session (SessionDep): The database session supplied by dependency injection.
 
     Returns:
         UserResponseDTO: The requested user resource formatted as a response DTO.
@@ -80,7 +80,7 @@ def get_user(
     response_model=UserResponseDTO,
 )
 def update_user(
-    user_id: int,
+    user_id: Annotated[int, Path(gt=0, le=2147483647)],
     data: UserUpdateDTO,
     session: SessionDep,
 ) -> UserResponseDTO:
@@ -88,8 +88,8 @@ def update_user(
 
     Args:
         user_id (int): The unique identifier of the user to update.
-        data (UserUpdateDTO): The payload containing updated user details.
-        session (Session, optional): The database session supplied by the dependency.
+        data (UserUpdateDTO): The data transfer object containing updated user attributes.
+        session (SessionDep): The database session supplied by dependency injection.
 
     Returns:
         UserResponseDTO: The updated user resource formatted as a response DTO.

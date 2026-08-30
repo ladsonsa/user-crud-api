@@ -239,3 +239,50 @@ def test_create_user_concurrent_duplicate_email() -> None:
         results = list(executor.map(lambda _: create_user(), range(2)))
 
     assert sorted(results) == [201, 409]
+
+
+@pytest.mark.parametrize(
+    "user_id",
+    [
+        "99999999999999999999999999999999",
+        "abc",
+        "1.5",
+    ],
+)
+def test_get_user_user_id_invalid(user_id: str) -> None:
+    """Tests that passing invalid user_id path parameters returns a 422 Unprocessable Entity error.
+
+    Args:
+        user_id (str): The invalid path parameter value being tested.
+    """
+    response = client.get(f"/api/v1/users/{user_id}")
+
+    assert response.status_code == 422
+
+
+@pytest.mark.parametrize(
+    ("user_id", "expected_status"),
+    [
+        ("999999999", 404),
+        ("abc", 422),
+    ],
+)
+def test_update_user_invalid_user_id(
+    user_id: str,
+    expected_status: int,
+) -> None:
+    """Tests updating a user with nonexistent or malformed path parameters.
+
+    Args:
+        user_id (str): The user identifier path parameter to test.
+        expected_status (int): The expected HTTP status code returned by the API.
+    """
+    response = client.put(
+        f"/api/v1/users/{user_id}",
+        json={
+            "name": "Updated User",
+            "email": "updated@example.com",
+        },
+    )
+
+    assert response.status_code == expected_status

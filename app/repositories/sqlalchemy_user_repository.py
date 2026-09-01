@@ -4,6 +4,7 @@ from sqlalchemy.orm import Session
 from app.exceptions.user_exceptions import (
     DatabaseOperationError,
     DuplicateUserEmailError,
+    ForeignKeyViolationError,
 )
 from app.models.user_model import UserModel
 from app.repositories.user_repository import UserRepository
@@ -113,7 +114,7 @@ class SQLAlchemyUserRepository(UserRepository):
             user (UserModel): The user entity instance to be deleted.
 
         Raises:
-            DuplicateUserEmailError: If deletion violates database integrity constraints.
+            ForeignKeyViolationError: If deletion violates foreign key constraints.
             DatabaseOperationError: If a general database failure occurs during execution.
         """
         try:
@@ -121,7 +122,7 @@ class SQLAlchemyUserRepository(UserRepository):
             self._session.commit()
         except IntegrityError as exc:
             self._session.rollback()
-            raise DuplicateUserEmailError from exc
+            raise ForeignKeyViolationError from exc
 
         except SQLAlchemyError as exc:
             self._session.rollback()

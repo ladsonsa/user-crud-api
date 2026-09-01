@@ -103,7 +103,7 @@ def update_user(
     status_code=status.HTTP_204_NO_CONTENT,
 )
 def delete_user(
-    user_id: int,
+    user_id: Annotated[int, Path(gt=0, le=2147483647)],
     session: SessionDep,
 ) -> None:
     """Handles the endpoint to remove a user from the system by their unique identifier.

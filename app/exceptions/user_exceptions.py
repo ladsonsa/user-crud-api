@@ -14,3 +14,9 @@ class DatabaseOperationError(Exception):
     """Raised when an unrecoverable database or persistence operation fails."""
 
     pass
+
+
+class ForeignKeyViolationError(Exception):
+    """Raised when a database deletion or update violates a foreign key constraint."""
+
+    pass

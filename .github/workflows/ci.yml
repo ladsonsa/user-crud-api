@@ -12,6 +12,28 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: user_crud_api_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d user_crud_api_test" 
+          --health-interval 5s 
+          --health-timeout 5s 
+          --health-retries 10
+    
+    env:
+      POSTGRES_DB: user_crud_api_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -33,5 +55,5 @@ jobs:
       - name: Check Black formatting
         run: poetry run black --check .
 
-      - name: Run unit tests
-        run: poetry run pytest tests/unit --cov=app --cov-report=term-missing
+      - name: Run tests
+        run: poetry run pytest --cov=app --cov-report=term-missing

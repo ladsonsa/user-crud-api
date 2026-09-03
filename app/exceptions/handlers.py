@@ -25,8 +25,8 @@ def register_exception_handlers(app: FastAPI) -> None:
         request: Request,
         exc: UserNotFoundError,
     ) -> JSONResponse:
-        logger.warning("User not found")
         """Handles UserNotFoundError exceptions by returning a 404 Not Found response."""
+        logger.warning("User not found")
         return JSONResponse(
             status_code=404,
             content={"detail": "User not found"},
@@ -37,8 +37,8 @@ def register_exception_handlers(app: FastAPI) -> None:
         request: Request,
         exc: DuplicateUserEmailError,
     ) -> JSONResponse:
-        logger.warning("Duplicate email")
         """Handles DuplicateUserEmailError exceptions by returning a 409 Conflict response."""
+        logger.warning("Duplicate email")
         return JSONResponse(
             status_code=409,
             content={"detail": "Email already exists"},
@@ -49,8 +49,8 @@ def register_exception_handlers(app: FastAPI) -> None:
         request: Request,
         exc: DatabaseOperationError,
     ) -> JSONResponse:
-        logger.error("Database operation failed")
         """Handles DatabaseOperationError exceptions by returning a 500 Internal Server Error response."""
+        logger.error("Database operation failed")
         return JSONResponse(
             status_code=500,
             content={"detail": "Database operation failed"},
@@ -61,8 +61,8 @@ def register_exception_handlers(app: FastAPI) -> None:
         request: Request,
         exc: Exception,
     ) -> JSONResponse:
-        logger.exception("Unexpected application error")
         """Catch-all handler for unhandled exceptions, returning a generic 500 Internal Server Error response."""
+        logger.exception("Unexpected application error")
         return JSONResponse(
             status_code=500,
             content={"detail": "Internal server error"},

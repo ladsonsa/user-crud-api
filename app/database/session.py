@@ -16,9 +16,6 @@ def get_db_session() -> Generator[Session]:
     """Provides a transactional database session for context management.
 
     Yields:
-        Generator[Session, None, None]: A SQLAlchemy Session object.
-
-    Yields:
         Session: An active database session instance.
     """
     session = SessionLocal()

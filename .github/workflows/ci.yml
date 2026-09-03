@@ -1,0 +1,70 @@
+# ==============================================================================
+# Workflow: Continuous Integration (CI)
+# Description: Automates code quality checks, linting (Ruff, Black), and 
+# executes pytest with coverage requirements against a PostgreSQL container.
+# Trigger: Push or Pull Request to the 'dev' branch.
+# ==============================================================================
+
+name: CI
+
+on:
+  push:
+    branches:
+      - dev
+  pull_request:
+    branches:
+      - dev
+      - main
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: user_crud_api_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d user_crud_api_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      POSTGRES_DB: user_crud_api_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install Poetry
+        run: pip install poetry==2.4.1
+
+      - name: Install dependencies
+        run: poetry install --with dev --no-interaction
+
+      - name: Verify PostgreSQL
+        run: pg_isready -h localhost -p 5432 -U postgres -d user_crud_api_test
+
+      - name: Run Ruff
+        run: poetry run ruff check .
+
+      - name: Check Black formatting
+        run: poetry run black --check .
+
+      - name: Run tests
+        run: poetry run pytest --cov=app --cov-report=term-missing --cov-fail-under=80

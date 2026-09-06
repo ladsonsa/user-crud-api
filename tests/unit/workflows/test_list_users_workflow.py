@@ -1,5 +1,6 @@
 from app.models.user_model import UserModel
 from app.repositories.user_repository import UserRepository
+from app.security.password import hash_password
 from app.workflows.list_users import ListUsersWorkflow
 
 
@@ -80,10 +81,18 @@ def test_list_users_returns_all_users() -> None:
     """Tests that ListUsersWorkflow retrieves all persisted user records from the repository."""
     repository = FakeUserRepository()
 
-    first = UserModel(name="Alice", email="alice@example.com")
+    first = UserModel(
+        name="Alice",
+        email="alice@example.com",
+        password_hash=hash_password("SecurePassword123"),
+    )
     first.id = 1
 
-    second = UserModel(name="Bob", email="bob@example.com")
+    second = UserModel(
+        name="Bob",
+        email="bob@example.com",
+        password_hash=hash_password("SecurePassword123"),
+    )
     second.id = 2
 
     repository.users.extend([first, second])

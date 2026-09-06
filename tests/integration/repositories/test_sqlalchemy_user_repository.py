@@ -11,6 +11,7 @@ from app.exceptions.user_exceptions import (
 )
 from app.models.user_model import UserModel
 from app.repositories.sqlalchemy_user_repository import SQLAlchemyUserRepository
+from app.security.password import hash_password
 
 
 def setup_module() -> None:
@@ -28,6 +29,7 @@ def test_repository_create_and_find_by_id() -> None:
         user = UserModel(
             name="Alice",
             email="alice.repository@example.com",
+            password_hash=hash_password("SecurePassword123"),
         )
 
         created = repository.create(user)
@@ -50,6 +52,7 @@ def test_repository_find_by_email() -> None:
         user = UserModel(
             name="Bob",
             email="bob.repository@example.com",
+            password_hash=hash_password("SecurePassword123"),
         )
 
         repository.create(user)
@@ -72,6 +75,7 @@ def test_repository_update() -> None:
         user = UserModel(
             name="Carol",
             email="carol.repository@example.com",
+            password_hash=hash_password("SecurePassword123"),
         )
 
         created = repository.create(user)
@@ -95,6 +99,7 @@ def test_repository_delete() -> None:
         user = UserModel(
             name="Dave",
             email="dave.repository@example.com",
+            password_hash=hash_password("SecurePassword123"),
         )
 
         created = repository.create(user)
@@ -120,11 +125,13 @@ def test_repository_create_duplicate_email() -> None:
         first = UserModel(
             name="Duplicate First",
             email="duplicate.repository@example.com",
+            password_hash=hash_password("SecurePassword123"),
         )
 
         second = UserModel(
             name="Duplicate Second",
             email="duplicate.repository@example.com",
+            password_hash=hash_password("SecurePassword123"),
         )
 
         repository.create(first)
@@ -151,6 +158,7 @@ def test_repository_create_duplicate_email_raises_error() -> None:
         user = UserModel(
             name="Rollback",
             email="rollback.repository@example.com",
+            password_hash=hash_password("SecurePassword123"),
         )
 
         with patch.object(
@@ -184,6 +192,7 @@ def test_repository_create_database_error_rolls_back() -> None:
         user = UserModel(
             name="Database Error",
             email="database-error.repository@example.com",
+            password_hash=hash_password("SecurePassword123"),
         )
 
         with patch.object(
@@ -218,6 +227,7 @@ def test_repository_update_database_error_rolls_back() -> None:
         user = UserModel(
             name="Update Error",
             email="update-error.repository@example.com",
+            password_hash=hash_password("SecurePassword123"),
         )
 
         created = repository.create(user)
@@ -255,6 +265,7 @@ def test_repository_delete_database_error_rolls_back() -> None:
         user = UserModel(
             name="Delete Error",
             email="delete-error.repository@example.com",
+            password_hash=hash_password("SecurePassword123"),
         )
 
         created = repository.create(user)

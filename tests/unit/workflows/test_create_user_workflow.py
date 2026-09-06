@@ -4,6 +4,7 @@ from app.dtos.user_create import UserCreateDTO
 from app.exceptions.user_exceptions import DuplicateUserEmailError
 from app.models.user_model import UserModel
 from app.repositories.user_repository import UserRepository
+from app.security.password import hash_password
 from app.workflows.create_user import CreateUserWorkflow
 
 
@@ -87,37 +88,37 @@ def test_create_user_success() -> None:
     workflow = CreateUserWorkflow(repository)
 
     data = UserCreateDTO(
-        name="Alice",
-        email="alice@example.com",
+        name="John Doe",
+        email="john.doe@example.com",
+        password="SecurePassword123",
     )
 
     user = workflow.execute(data)
 
     assert user.id == 1
-    assert user.name == "Alice"
-    assert user.email == "alice@example.com"
+    assert user.name == "John Doe"
+    assert user.email == "john.doe@example.com"
+    assert user.password_hash != "SecurePassword123"
     assert len(repository.users) == 1
 
 
 def test_create_user_duplicate_email() -> None:
-    """Tests that the user creation workflow raises DuplicateUserEmailError when given an existing email.
-
-    Raises:
-        DuplicateUserEmailError: Expected exception when attempting to create a user with a duplicate email.
-    """
+    """Tests that the user creation workflow raises DuplicateUserEmailError when given an existing email."""
     repository = FakeUserRepository()
     workflow = CreateUserWorkflow(repository)
 
     existing_user = UserModel(
-        name="Alice",
-        email="alice@example.com",
+        name="John Doe",
+        email="john.doe@example.com",
+        password_hash=hash_password("SecurePassword123"),
     )
     existing_user.id = 1
     repository.users.append(existing_user)
 
     data = UserCreateDTO(
-        name="Bob",
-        email="alice@example.com",
+        name="John Doe",
+        email="john.doe@example.com",
+        password="SecurePassword123",
     )
 
     with pytest.raises(DuplicateUserEmailError):

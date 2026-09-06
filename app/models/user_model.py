@@ -15,6 +15,7 @@ class UserModel(Base):
         id (Mapped[int]): Primary key identifier for the user.
         name (Mapped[str]): Full name of the user, up to 100 characters.
         email (Mapped[str]): Unique email address of the user, indexed for fast retrieval.
+        password_hash (Mapped[str]): Hashed password string stored securely.
     """
 
     __tablename__ = "users"
@@ -27,3 +28,4 @@ class UserModel(Base):
         nullable=False,
         index=True,
     )
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)

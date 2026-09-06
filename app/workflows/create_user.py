@@ -2,6 +2,7 @@ from app.dtos.user_create import UserCreateDTO
 from app.exceptions.user_exceptions import DuplicateUserEmailError
 from app.models.user_model import UserModel
 from app.repositories.user_repository import UserRepository
+from app.security.password import hash_password
 
 
 class CreateUserWorkflow:
@@ -41,6 +42,7 @@ class CreateUserWorkflow:
         user = UserModel(
             name=data.name,
             email=data.email,
+            password_hash=hash_password(data.password),
         )
 
         return self._repository.create(user)

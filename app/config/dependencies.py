@@ -1,8 +1,15 @@
+from typing import Annotated
+
+from fastapi import Depends
 from sqlalchemy.orm import Session
 
+from app.controllers.auth_controller import AuthController
 from app.controllers.user_controller import UserController
+from app.database.session import get_db_session
 from app.repositories.sqlalchemy_user_repository import SQLAlchemyUserRepository
+from app.services.auth_service import AuthService
 from app.services.user_service import UserService
+from app.workflows.authenticate_user import AuthenticateUserWorkflow
 from app.workflows.create_user import CreateUserWorkflow
 from app.workflows.delete_user import DeleteUserWorkflow
 from app.workflows.get_user import GetUserWorkflow
@@ -33,3 +40,25 @@ def get_user_controller(session: Session) -> UserController:
     )
 
     return UserController(service)
+
+
+def get_auth_controller(
+    session: Annotated[Session, Depends(get_db_session)],
+) -> AuthController:
+    """Factory function constructing the AuthController with fully wired dependencies.
+
+    Instantiates the SQLAlchemy repository, injects it into the authentication workflow,
+    wraps it in the domain service, and returns the configured controller.
+
+    Args:
+        session (Session): The active SQLAlchemy database session.
+
+    Returns:
+        AuthController: An operational authentication controller instance.
+    """
+    repository = SQLAlchemyUserRepository(session)
+    service = AuthService(
+        authenticate_workflow=AuthenticateUserWorkflow(repository),
+    )
+
+    return AuthController(service)

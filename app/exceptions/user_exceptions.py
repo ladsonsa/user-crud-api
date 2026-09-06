@@ -20,3 +20,9 @@ class ForeignKeyViolationError(Exception):
     """Raised when a database deletion or update violates a foreign key constraint."""
 
     pass
+
+
+class AuthenticationError(Exception):
+    """Base exception raised for authentication failures across domain workflows."""
+
+    pass

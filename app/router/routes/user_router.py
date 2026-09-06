@@ -8,6 +8,9 @@ from app.database.session import get_db_session
 from app.dtos.user_create import UserCreateDTO
 from app.dtos.user_response import UserResponseDTO
 from app.dtos.user_update import UserUpdateDTO
+from app.models.user_model import UserModel
+from app.security.authentication import get_current_user
+from app.security.authorization import ensure_user_ownership
 
 router = APIRouter(prefix="/api/v1/users", tags=["Users"])
 SessionDep = Annotated[Session, Depends(get_db_session)]
@@ -40,7 +43,7 @@ def create_user(
     response_model=list[UserResponseDTO],
 )
 def list_users(
-    session: SessionDep,
+    session: SessionDep, current_user: Annotated[UserModel, Depends(get_current_user)]
 ) -> list[UserResponseDTO]:
     """Handles the endpoint to retrieve all registered users.
 
@@ -61,6 +64,7 @@ def list_users(
 def get_user(
     user_id: Annotated[int, Path(gt=0, le=2147483647)],
     session: SessionDep,
+    current_user: Annotated[UserModel, Depends(get_current_user)],
 ) -> UserResponseDTO:
     """Handles the endpoint to retrieve a single user by their unique identifier.
 
@@ -71,6 +75,7 @@ def get_user(
     Returns:
         UserResponseDTO: The requested user resource formatted as a response DTO.
     """
+    ensure_user_ownership(current_user, user_id)
     controller = get_user_controller(session)
     return controller.get_user(user_id)
 
@@ -83,6 +88,7 @@ def update_user(
     user_id: Annotated[int, Path(gt=0, le=2147483647)],
     data: UserUpdateDTO,
     session: SessionDep,
+    current_user: Annotated[UserModel, Depends(get_current_user)],
 ) -> UserResponseDTO:
     """Handles the endpoint to update an existing user's information.
 
@@ -94,6 +100,7 @@ def update_user(
     Returns:
         UserResponseDTO: The updated user resource formatted as a response DTO.
     """
+    ensure_user_ownership(current_user, user_id)
     controller = get_user_controller(session)
     return controller.update_user(user_id, data)
 
@@ -105,6 +112,7 @@ def update_user(
 def delete_user(
     user_id: Annotated[int, Path(gt=0, le=2147483647)],
     session: SessionDep,
+    current_user: Annotated[UserModel, Depends(get_current_user)],
 ) -> None:
     """Handles the endpoint to remove a user from the system by their unique identifier.
 
@@ -112,5 +120,6 @@ def delete_user(
         user_id (int): The unique identifier of the user to delete.
         session (Session, optional): The database session supplied by the dependency.
     """
+    ensure_user_ownership(current_user, user_id)
     controller = get_user_controller(session)
     controller.delete_user(user_id)

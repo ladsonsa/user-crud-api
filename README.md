@@ -273,7 +273,7 @@ JWT_ALGORITHM
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES
 ```
 
-Use a strong secret key for `JWT_SECRET_KEY`.
+Use a strong secret key with at least 32 characters for `JWT_SECRET_KEY`.
 
 > Do not commit `.env` files or real credentials to the repository.
 

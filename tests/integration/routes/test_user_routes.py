@@ -154,7 +154,7 @@ def test_delete_user() -> None:
         headers=admin_headers,
     )
 
-    assert response.status_code == 403
+    assert response.status_code == 404
 
 
 def test_update_user_with_empty_payload() -> None:
@@ -221,7 +221,7 @@ def test_create_user_invalid_payload(payload: dict[str, object]) -> None:
 
 
 def test_get_user_not_found() -> None:
-    """Tests retrieving a nonexistent user ID, ensuring access controls or masking return HTTP 403 Forbidden."""
+    """Tests retrieving a nonexistent user ID, ensuring the server responds with an HTTP 404 Not Found status."""
     _, headers = create_authenticated_user(
         "Not Found",
         "not-found.routes@example.com",
@@ -232,7 +232,7 @@ def test_get_user_not_found() -> None:
         headers=headers,
     )
 
-    assert response.status_code == 403
+    assert response.status_code == 404
 
 
 @pytest.mark.parametrize("user_id", ["invalid", "abc", "1.5"])
@@ -280,7 +280,7 @@ def test_update_user_duplicate_email() -> None:
 
 
 def test_update_user_not_found() -> None:
-    """Tests updating a nonexistent user ID, verifying access controls return HTTP 403 Forbidden."""
+    """Tests updating a nonexistent user ID, verifying the server responds with an HTTP 404 Not Found status."""
     _, headers = create_authenticated_user(
         "Found",
         "fount@example.com",
@@ -295,11 +295,11 @@ def test_update_user_not_found() -> None:
         },
     )
 
-    assert response.status_code == 403
+    assert response.status_code == 404
 
 
 def test_delete_user_not_found() -> None:
-    """Tests deleting a nonexistent user ID, verifying access controls return HTTP 403 Forbidden."""
+    """Tests deleting a nonexistent user ID, verifying the server responds with an HTTP 404 Not Found status."""
     _, headers = create_authenticated_user(
         "Delete",
         "delete@example.com",
@@ -309,7 +309,7 @@ def test_delete_user_not_found() -> None:
         headers=headers,
     )
 
-    assert response.status_code == 403
+    assert response.status_code == 404
 
 
 def test_create_user_concurrent_duplicate_email() -> None:
@@ -367,7 +367,7 @@ def test_get_user_user_id_invalid(user_id: str) -> None:
 @pytest.mark.parametrize(
     ("user_id", "expected_status"),
     [
-        ("999999999", 403),
+        ("999999999", 404),
         ("abc", 422),
     ],
 )
@@ -395,3 +395,150 @@ def test_update_user_invalid_user_id(
     )
 
     assert response.status_code == expected_status
+
+
+def test_login_success() -> None:
+    """Tests successful user authentication returning an HTTP 200 OK status and a JWT access token."""
+    email = "login.success@example.com"
+    password = "SecurePassword123"
+
+    create_response = client.post(
+        "/api/v1/users",
+        json={
+            "name": "Login User",
+            "email": email,
+            "password": password,
+        },
+    )
+
+    assert create_response.status_code == 201
+
+    response = client.post(
+        "/api/v1/auth/login",
+        json={
+            "email": email,
+            "password": password,
+        },
+    )
+
+    assert response.status_code == 200
+
+    data = response.json()
+
+    assert "access_token" in data
+    assert data["token_type"] == "bearer"
+
+
+def test_login_invalid_password() -> None:
+    """Tests authentication attempt with an incorrect password, ensuring HTTP 401 Unauthorized and WWW-Authenticate header."""
+    email = "login.invalid.password@example.com"
+
+    create_response = client.post(
+        "/api/v1/users",
+        json={
+            "name": "Login User",
+            "email": email,
+            "password": "SecurePassword123",
+        },
+    )
+
+    assert create_response.status_code == 201
+
+    response = client.post(
+        "/api/v1/auth/login",
+        json={
+            "email": email,
+            "password": "WrongPassword123",
+        },
+    )
+
+    assert response.status_code == 401
+    assert response.headers["WWW-Authenticate"] == "Bearer"
+
+
+def test_login_unknown_email() -> None:
+    """Tests authentication attempt with an unregistered email address, ensuring HTTP 401 Unauthorized."""
+    response = client.post(
+        "/api/v1/auth/login",
+        json={
+            "email": "unknown.login@example.com",
+            "password": "SecurePassword123",
+        },
+    )
+
+    assert response.status_code == 401
+    assert response.headers["WWW-Authenticate"] == "Bearer"
+
+
+def test_login_invalid_payload() -> None:
+    """Tests authentication request with invalid or malformed payload data, ensuring HTTP 422 Unprocessable Entity."""
+    response = client.post(
+        "/api/v1/auth/login",
+        json={
+            "email": "invalid.login@example.com",
+            "password": "short",
+        },
+    )
+
+    assert response.status_code == 422
+
+
+def test_get_user_forbidden_for_another_user() -> None:
+    """Tests that a user attempting to retrieve another user's profile receives an HTTP 403 Forbidden status."""
+    target_user_id, _ = create_authenticated_user(
+        "Target",
+        "target.get@example.com",
+    )
+    _, current_user_headers = create_authenticated_user(
+        "Current",
+        "current.get@example.com",
+    )
+
+    response = client.get(
+        f"/api/v1/users/{target_user_id}",
+        headers=current_user_headers,
+    )
+
+    assert response.status_code == 403
+
+
+def test_update_user_forbidden_for_another_user() -> None:
+    """Tests that a user attempting to update another user's profile receives an HTTP 403 Forbidden status."""
+    target_user_id, _ = create_authenticated_user(
+        "Target",
+        "target.update@example.com",
+    )
+    _, current_user_headers = create_authenticated_user(
+        "Current",
+        "current.update@example.com",
+    )
+
+    response = client.put(
+        f"/api/v1/users/{target_user_id}",
+        headers=current_user_headers,
+        json={
+            "name": "Unauthorized Update",
+            "email": "unauthorized.update@example.com",
+        },
+    )
+
+    assert response.status_code == 403
+
+
+def test_delete_user_forbidden_for_another_user() -> None:
+    """Tests that a user attempting to delete another user's profile receives an HTTP 403 Forbidden status."""
+    target_user_id, _ = create_authenticated_user(
+        "Target",
+        "target.delete@example.com",
+    )
+    _, current_user_headers = create_authenticated_user(
+        "Current",
+        "current.delete@example.com",
+    )
+
+    response = client.delete(
+        f"/api/v1/users/{target_user_id}",
+        headers=current_user_headers,
+    )
+
+    assert response.status_code == 403

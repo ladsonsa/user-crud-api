@@ -82,3 +82,23 @@ def test_get_current_user_success(
     result = get_current_user(credentials, MagicMock())
 
     assert result is user
+
+
+@patch("app.security.authentication.decode_access_token")
+def test_get_current_user_with_expired_token(
+    mock_decode_access_token: MagicMock,
+) -> None:
+    """Tests that resolving the current user with an expired JWT token raises an AuthenticationError.
+
+    Args:
+        mock_decode_access_token (MagicMock): Mock function for token decoding patched to raise ExpiredSignatureError.
+    """
+    mock_decode_access_token.side_effect = jwt.ExpiredSignatureError(
+        "Signature has expired"
+    )
+
+    credentials = MagicMock()
+    credentials.credentials = "expired-token"
+
+    with pytest.raises(AuthenticationError):
+        get_current_user(credentials, MagicMock())

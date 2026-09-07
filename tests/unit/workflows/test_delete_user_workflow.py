@@ -94,7 +94,7 @@ def test_delete_user_success() -> None:
 
     workflow = DeleteUserWorkflow(repository)
 
-    workflow.execute(1)
+    workflow.execute(1, user)
 
     assert repository.users == []
 
@@ -103,5 +103,11 @@ def test_delete_user_not_found() -> None:
     """Tests that DeleteUserWorkflow raises UserNotFoundError when given a non-existent ID."""
     workflow = DeleteUserWorkflow(FakeUserRepository())
 
+    user = UserModel(
+        name="Adels",
+        email="adels@example.com",
+        password_hash=hash_password("SecurePassword123"),
+    )
+
     with pytest.raises(UserNotFoundError):
-        workflow.execute(999)
+        workflow.execute(999, user)

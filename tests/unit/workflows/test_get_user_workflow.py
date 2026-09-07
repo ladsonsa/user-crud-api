@@ -94,7 +94,7 @@ def test_get_user_success() -> None:
 
     workflow = GetUserWorkflow(repository)
 
-    result = workflow.execute(1)
+    result = workflow.execute(1, user)
 
     assert result.id == 1
     assert result.name == "Alice"
@@ -104,5 +104,10 @@ def test_get_user_not_found() -> None:
     """Tests that GetUserWorkflow raises UserNotFoundError when given a non-existent ID."""
     workflow = GetUserWorkflow(FakeUserRepository())
 
+    user = UserModel(
+        name="Christian",
+        email="christian@example.com",
+        password_hash=hash_password("SecurePassword123"),
+    )
     with pytest.raises(UserNotFoundError):
-        workflow.execute(999)
+        workflow.execute(999, user)

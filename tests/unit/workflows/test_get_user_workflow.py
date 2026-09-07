@@ -3,6 +3,7 @@ import pytest
 from app.exceptions.user_exceptions import UserNotFoundError
 from app.models.user_model import UserModel
 from app.repositories.user_repository import UserRepository
+from app.security.password import hash_password
 from app.workflows.get_user import GetUserWorkflow
 
 
@@ -80,28 +81,33 @@ class FakeUserRepository(UserRepository):
 
 
 def test_get_user_success() -> None:
-    """Tests successful retrieval of an existing user by identifier."""
+    """Tests successful retrieval of an existing user by identifier using GetUserWorkflow."""
     repository = FakeUserRepository()
 
-    user = UserModel(name="Alice", email="alice@example.com")
+    user = UserModel(
+        name="Alice",
+        email="alice@example.com",
+        password_hash=hash_password("SecurePassword123"),
+    )
     user.id = 1
     repository.users.append(user)
 
     workflow = GetUserWorkflow(repository)
 
-    result = workflow.execute(1)
+    result = workflow.execute(1, user)
 
     assert result.id == 1
     assert result.name == "Alice"
 
 
 def test_get_user_not_found() -> None:
-    """Tests that GetUserWorkflow raises UserNotFoundError when given a non-existent ID.
-
-    Raises:
-        UserNotFoundError: Expected exception when attempting to fetch a missing user.
-    """
+    """Tests that GetUserWorkflow raises UserNotFoundError when given a non-existent ID."""
     workflow = GetUserWorkflow(FakeUserRepository())
 
+    user = UserModel(
+        name="Christian",
+        email="christian@example.com",
+        password_hash=hash_password("SecurePassword123"),
+    )
     with pytest.raises(UserNotFoundError):
-        workflow.execute(999)
+        workflow.execute(999, user)

@@ -3,6 +3,7 @@ import pytest
 from app.exceptions.user_exceptions import UserNotFoundError
 from app.models.user_model import UserModel
 from app.repositories.user_repository import UserRepository
+from app.security.password import hash_password
 from app.workflows.delete_user import DeleteUserWorkflow
 
 
@@ -80,27 +81,33 @@ class FakeUserRepository(UserRepository):
 
 
 def test_delete_user_success() -> None:
-    """Tests successful deletion of an existing user record."""
+    """Tests successful deletion of an existing user record using DeleteUserWorkflow."""
     repository = FakeUserRepository()
 
-    user = UserModel(name="Alice", email="alice@example.com")
+    user = UserModel(
+        name="Alice",
+        email="alice@example.com",
+        password_hash=hash_password("SecurePassword123"),
+    )
     user.id = 1
     repository.users.append(user)
 
     workflow = DeleteUserWorkflow(repository)
 
-    workflow.execute(1)
+    workflow.execute(1, user)
 
     assert repository.users == []
 
 
 def test_delete_user_not_found() -> None:
-    """Tests that DeleteUserWorkflow raises UserNotFoundError when given a non-existent ID.
-
-    Raises:
-        UserNotFoundError: Expected exception when attempting to delete a missing user.
-    """
+    """Tests that DeleteUserWorkflow raises UserNotFoundError when given a non-existent ID."""
     workflow = DeleteUserWorkflow(FakeUserRepository())
 
+    user = UserModel(
+        name="Adels",
+        email="adels@example.com",
+        password_hash=hash_password("SecurePassword123"),
+    )
+
     with pytest.raises(UserNotFoundError):
-        workflow.execute(999)
+        workflow.execute(999, user)

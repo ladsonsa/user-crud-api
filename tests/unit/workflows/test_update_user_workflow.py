@@ -7,6 +7,7 @@ from app.exceptions.user_exceptions import (
 )
 from app.models.user_model import UserModel
 from app.repositories.user_repository import UserRepository
+from app.security.password import hash_password
 from app.workflows.update_user import UpdateUserWorkflow
 
 
@@ -87,7 +88,11 @@ def test_update_user_success() -> None:
     """Tests successful user update workflow execution with valid input data."""
     repository = FakeUserRepository()
 
-    user = UserModel(name="Alice", email="alice@example.com")
+    user = UserModel(
+        name="Alice",
+        email="alice@example.com",
+        password_hash=hash_password("SecurePassword123"),
+    )
     user.id = 1
     repository.users.append(user)
 
@@ -96,6 +101,7 @@ def test_update_user_success() -> None:
     result = workflow.execute(
         1,
         UserUpdateDTO(name="Alice Smith", email="alice.smith@example.com"),
+        user,
     )
 
     assert result.name == "Alice Smith"
@@ -103,13 +109,14 @@ def test_update_user_success() -> None:
 
 
 def test_update_user_not_found() -> None:
-    """Tests that UpdateUserWorkflow raises UserNotFoundError when target user does not exist.
-
-    Raises:
-        UserNotFoundError: Expected exception when attempting to update a missing user.
-    """
+    """Tests that UpdateUserWorkflow raises UserNotFoundError when the target user does not exist."""
     workflow = UpdateUserWorkflow(FakeUserRepository())
 
+    user = UserModel(
+        name="Carls",
+        email="carls@example.com",
+        password_hash=hash_password("SecurePassword123"),
+    )
     with pytest.raises(UserNotFoundError):
         workflow.execute(
             999,
@@ -117,21 +124,26 @@ def test_update_user_not_found() -> None:
                 name="Test",
                 email="test@example.com",
             ),
+            user,
         )
 
 
 def test_update_user_duplicate_email() -> None:
-    """Tests that UpdateUserWorkflow raises DuplicateUserEmailError when new email is used by another user.
-
-    Raises:
-        DuplicateUserEmailError: Expected exception when updated email collides with existing user.
-    """
+    """Tests that UpdateUserWorkflow raises DuplicateUserEmailError when the updated email is already used by another user."""
     repository = FakeUserRepository()
 
-    first = UserModel(name="Alice", email="alice@example.com")
+    first = UserModel(
+        name="Alice",
+        email="alice@example.com",
+        password_hash=hash_password("SecurePassword123"),
+    )
     first.id = 1
 
-    second = UserModel(name="Bob", email="bob@example.com")
+    second = UserModel(
+        name="Bob",
+        email="bob@example.com",
+        password_hash=hash_password("SecurePassword123"),
+    )
     second.id = 2
 
     repository.users.extend([first, second])
@@ -145,4 +157,5 @@ def test_update_user_duplicate_email() -> None:
                 name="Bob",
                 email="alice@example.com",
             ),
+            second,
         )

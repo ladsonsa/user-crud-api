@@ -1,6 +1,6 @@
 [project]
 name = "user-crud-api"
-version = "0.1.0"
+version = "0.2.0"
 description = "A layered User CRUD REST API built with FastAPI, SQLAlchemy, and PostgreSQL."
 authors = [
     { name = "Ládson Sá", email = "123712890+PreGUU@users.noreply.github.com" }
@@ -15,7 +15,9 @@ dependencies = [
     "sqlalchemy>=2.0.52,<3.0.0",
     "pydantic-settings>=2.15.0,<3.0.0",
     "email-validator>=2.3.0,<3.0.0",
-    "psycopg[binary]>=3.3.4,<4.0.0"
+    "psycopg[binary]>=3.3.4,<4.0.0",
+    "pwdlib[argon2] (>=0.3.1,<0.4.0)",
+    "pyjwt (>=2.10,<3.0)"
 ]
 
 [build-system]

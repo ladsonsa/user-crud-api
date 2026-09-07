@@ -16,7 +16,7 @@ def get_db_session() -> Generator[Session]:
     """Provides a transactional database session for context management.
 
     Yields:
-        Session: An active database session instance.
+        Session: An active database session instance managed during the request lifecycle.
     """
     session = SessionLocal()
 

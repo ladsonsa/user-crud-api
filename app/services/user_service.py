@@ -61,33 +61,45 @@ class UserService:
         """
         return self._list_workflow.execute()
 
-    def get_user(self, user_id: int) -> UserModel:
-        """Delegates fetching a single user by ID to the get workflow.
+    def get_user(self, user_id: int, current_user: UserModel) -> UserModel:
+        """Delegates the user retrieval process to the get workflow with ownership validation.
 
         Args:
             user_id (int): Unique identifier of the user to retrieve.
+            current_user (UserModel): The currently authenticated user making the request.
 
         Returns:
-            UserModel: The corresponding user model instance.
+            UserModel: The retrieved user model instance.
         """
-        return self._get_workflow.execute(user_id)
+        return self._get_workflow.execute(user_id, current_user)
 
-    def update_user(self, user_id: int, data: UserUpdateDTO) -> UserModel:
-        """Delegates the user update process to the update workflow.
+    def update_user(
+        self,
+        user_id: int,
+        data: UserUpdateDTO,
+        current_user: UserModel,
+    ) -> UserModel:
+        """Delegates the user update process to the update workflow with ownership validation.
 
         Args:
             user_id (int): Unique identifier of the user to update.
             data (UserUpdateDTO): Data transfer object containing fields to update.
+            current_user (UserModel): The currently authenticated user making the request.
 
         Returns:
             UserModel: The updated user model instance.
         """
-        return self._update_workflow.execute(user_id, data)
+        return self._update_workflow.execute(user_id, data, current_user)
 
-    def delete_user(self, user_id: int) -> None:
-        """Delegates the user deletion process to the delete workflow.
+    def delete_user(
+        self,
+        user_id: int,
+        current_user: UserModel,
+    ) -> None:
+        """Delegates the user deletion process to the delete workflow with ownership validation.
 
         Args:
             user_id (int): Unique identifier of the user to delete.
+            current_user (UserModel): The currently authenticated user making the request.
         """
-        self._delete_workflow.execute(user_id)
+        self._delete_workflow.execute(user_id, current_user)

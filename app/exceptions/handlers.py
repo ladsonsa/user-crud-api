@@ -6,6 +6,7 @@ from app.exceptions.user_exceptions import (
     DatabaseOperationError,
     DuplicateUserEmailError,
     UserNotFoundError,
+    UserOwnershipError,
 )
 from app.logs.logger import get_logger
 
@@ -56,7 +57,15 @@ def register_exception_handlers(app: FastAPI) -> None:
         request: Request,
         exc: UserNotFoundError,
     ) -> JSONResponse:
-        """Handles UserNotFoundError exceptions by returning a 404 Not Found response."""
+        """Handles UserNotFoundError exceptions by returning a 404 Not Found response.
+
+        Args:
+            request (Request): The incoming HTTP request instance that triggered the exception.
+            exc (UserNotFoundError): The caught user not found exception instance.
+
+        Returns:
+            JSONResponse: A 404 Not Found JSON response with error details.
+        """
         logger.warning(
             "User resource not found for request %s %s",
             request.method,
@@ -67,12 +76,45 @@ def register_exception_handlers(app: FastAPI) -> None:
             content={"detail": "User not found"},
         )
 
+    @app.exception_handler(UserOwnershipError)
+    async def user_ownership_error_handler(
+        request: Request,
+        exc: UserOwnershipError,
+    ) -> JSONResponse:
+        """Handles UserOwnershipError exceptions by returning a 403 Forbidden response.
+
+        Args:
+            request (Request): The incoming HTTP request instance that triggered the exception.
+            exc (UserOwnershipError): The caught user ownership exception instance.
+
+        Returns:
+            JSONResponse: A 403 Forbidden JSON response indicating insufficient permissions.
+        """
+        logger.warning(
+            "Unauthorized user resource access attempted on %s %s",
+            request.method,
+            request.url.path,
+        )
+
+        return JSONResponse(
+            status_code=status.HTTP_403_FORBIDDEN,
+            content={"detail": "You do not have permission to access this user."},
+        )
+
     @app.exception_handler(DuplicateUserEmailError)
     async def duplicate_email_handler(
         request: Request,
         exc: DuplicateUserEmailError,
     ) -> JSONResponse:
-        """Handles DuplicateUserEmailError exceptions by returning a 409 Conflict response."""
+        """Handles DuplicateUserEmailError exceptions by returning a 409 Conflict response.
+
+        Args:
+            request (Request): The incoming HTTP request instance that triggered the exception.
+            exc (DuplicateUserEmailError): The caught duplicate email exception instance.
+
+        Returns:
+            JSONResponse: A 409 Conflict JSON response indicating the email is already in use.
+        """
         logger.warning(
             "Duplicate user email registration attempted on %s %s",
             request.method,
@@ -88,7 +130,15 @@ def register_exception_handlers(app: FastAPI) -> None:
         request: Request,
         exc: DatabaseOperationError,
     ) -> JSONResponse:
-        """Handles DatabaseOperationError exceptions by returning a 500 Internal Server Error response."""
+        """Handles DatabaseOperationError exceptions by returning a 500 Internal Server Error response.
+
+        Args:
+            request (Request): The incoming HTTP request instance that triggered the exception.
+            exc (DatabaseOperationError): The caught database operation exception instance.
+
+        Returns:
+            JSONResponse: A 500 Internal Server Error JSON response indicating a persistence failure.
+        """
         logger.error(
             "Database operation error during %s %s: %s",
             request.method,
@@ -106,7 +156,15 @@ def register_exception_handlers(app: FastAPI) -> None:
         request: Request,
         exc: Exception,
     ) -> JSONResponse:
-        """Catch-all handler for unhandled exceptions, returning a generic 500 Internal Server Error response."""
+        """Catch-all handler for unhandled exceptions, returning a generic 500 Internal Server Error response.
+
+        Args:
+            request (Request): The incoming HTTP request instance that triggered the exception.
+            exc (Exception): The unhandled exception instance caught at runtime.
+
+        Returns:
+            JSONResponse: A generic 500 Internal Server Error JSON response.
+        """
         logger.exception(
             "Unhandled exception caught on %s %s: %s",
             request.method,

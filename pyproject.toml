@@ -1,6 +1,6 @@
 [project]
 name = "user-crud-api"
-version = "0.1.0"
+version = "0.2.0"
 description = "A layered User CRUD REST API built with FastAPI, SQLAlchemy, and PostgreSQL."
 authors = [
     { name = "Ládson Sá", email = "123712890+PreGUU@users.noreply.github.com" }

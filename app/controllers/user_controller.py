@@ -1,6 +1,7 @@
 from app.dtos.user_create import UserCreateDTO
 from app.dtos.user_response import UserResponseDTO
 from app.dtos.user_update import UserUpdateDTO
+from app.models.user_model import UserModel
 from app.services.user_service import UserService
 
 
@@ -40,39 +41,51 @@ class UserController:
         users = self._service.list_users()
         return [UserResponseDTO.model_validate(user) for user in users]
 
-    def get_user(self, user_id: int) -> UserResponseDTO:
-        """Handles the HTTP request to fetch a specific user by identifier.
+    def get_user(
+        self,
+        user_id: int,
+        current_user: UserModel,
+    ) -> UserResponseDTO:
+        """Retrieves a user by ID and converts the entity to a response DTO.
 
         Args:
-            user_id (int): Unique identifier of the user to retrieve.
+            user_id (int): The unique identifier of the target user to retrieve.
+            current_user (UserModel): The currently authenticated user making the request.
 
         Returns:
-            UserResponseDTO: Response DTO containing the requested user's details.
+            UserResponseDTO: Data transfer object containing the user details.
         """
-        user = self._service.get_user(user_id)
+        user = self._service.get_user(user_id, current_user)
         return UserResponseDTO.model_validate(user)
 
     def update_user(
         self,
         user_id: int,
         data: UserUpdateDTO,
+        current_user: UserModel,
     ) -> UserResponseDTO:
-        """Handles the HTTP request to update an existing user's details.
+        """Handles the request to update an existing user's attributes.
 
         Args:
-            user_id (int): Unique identifier of the user to update.
-            data (UserUpdateDTO): Data transfer object containing updated fields.
+            user_id (int): The unique identifier of the user to update.
+            data (UserUpdateDTO): Data transfer object containing fields to update.
+            current_user (UserModel): The currently authenticated user making the request.
 
         Returns:
-            UserResponseDTO: Response DTO representing the updated user state.
+            UserResponseDTO: Validated response DTO representing the updated user.
         """
-        user = self._service.update_user(user_id, data)
+        user = self._service.update_user(user_id, data, current_user)
         return UserResponseDTO.model_validate(user)
 
-    def delete_user(self, user_id: int) -> None:
-        """Handles the HTTP request to remove a user from the system.
+    def delete_user(
+        self,
+        user_id: int,
+        current_user: UserModel,
+    ) -> None:
+        """Handles the request to delete a user by their unique identifier.
 
         Args:
-            user_id (int): Unique identifier of the user to delete.
+            user_id (int): The unique identifier of the user to delete.
+            current_user (UserModel): The currently authenticated user making the request.
         """
-        self._service.delete_user(user_id)
+        self._service.delete_user(user_id, current_user)

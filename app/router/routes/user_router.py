@@ -10,7 +10,6 @@ from app.dtos.user_response import UserResponseDTO
 from app.dtos.user_update import UserUpdateDTO
 from app.models.user_model import UserModel
 from app.security.authentication import get_current_user
-from app.security.authorization import ensure_user_ownership
 
 router = APIRouter(prefix="/api/v1/users", tags=["Users"])
 SessionDep = Annotated[Session, Depends(get_db_session)]
@@ -29,7 +28,7 @@ def create_user(
 
     Args:
         data (UserCreateDTO): The payload containing details for creating the user.
-        session (Session, optional): The database session supplied by the dependency.
+        session (Session): The database session supplied by dependency injection.
 
     Returns:
         UserResponseDTO: The created user resource formatted as a response DTO.
@@ -43,12 +42,14 @@ def create_user(
     response_model=list[UserResponseDTO],
 )
 def list_users(
-    session: SessionDep, current_user: Annotated[UserModel, Depends(get_current_user)]
+    session: SessionDep,
+    current_user: Annotated[UserModel, Depends(get_current_user)],
 ) -> list[UserResponseDTO]:
     """Handles the endpoint to retrieve all registered users.
 
     Args:
-        session (Session, optional): The database session supplied by the dependency.
+        session (Session): The database session supplied by dependency injection.
+        current_user (UserModel): The currently authenticated user making the request.
 
     Returns:
         list[UserResponseDTO]: A list containing response DTOs for all stored users.
@@ -66,18 +67,18 @@ def get_user(
     session: SessionDep,
     current_user: Annotated[UserModel, Depends(get_current_user)],
 ) -> UserResponseDTO:
-    """Handles the endpoint to retrieve a single user by their unique identifier.
+    """Handles the endpoint to retrieve a specific user by their unique identifier.
 
     Args:
-        user_id (int): The unique identifier of the user to fetch.
-        session (SessionDep): The database session supplied by dependency injection.
+        user_id (int): The unique identifier of the target user to retrieve.
+        session (Session): The database session supplied by dependency injection.
+        current_user (UserModel): The currently authenticated user making the request.
 
     Returns:
-        UserResponseDTO: The requested user resource formatted as a response DTO.
+        UserResponseDTO: The retrieved user resource formatted as a response DTO.
     """
-    ensure_user_ownership(current_user, user_id)
     controller = get_user_controller(session)
-    return controller.get_user(user_id)
+    return controller.get_user(user_id, current_user)
 
 
 @router.put(
@@ -95,14 +96,14 @@ def update_user(
     Args:
         user_id (int): The unique identifier of the user to update.
         data (UserUpdateDTO): The data transfer object containing updated user attributes.
-        session (SessionDep): The database session supplied by dependency injection.
+        session (Session): The database session supplied by dependency injection.
+        current_user (UserModel): The currently authenticated user making the request.
 
     Returns:
         UserResponseDTO: The updated user resource formatted as a response DTO.
     """
-    ensure_user_ownership(current_user, user_id)
     controller = get_user_controller(session)
-    return controller.update_user(user_id, data)
+    return controller.update_user(user_id, data, current_user)
 
 
 @router.delete(
@@ -118,8 +119,8 @@ def delete_user(
 
     Args:
         user_id (int): The unique identifier of the user to delete.
-        session (Session, optional): The database session supplied by the dependency.
+        session (Session): The database session supplied by dependency injection.
+        current_user (UserModel): The currently authenticated user making the request.
     """
-    ensure_user_ownership(current_user, user_id)
     controller = get_user_controller(session)
-    controller.delete_user(user_id)
+    controller.delete_user(user_id, current_user)

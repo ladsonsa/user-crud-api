@@ -1,33 +1,30 @@
 from app.dtos.login import LoginDTO
-from app.models.user_model import UserModel
+from app.dtos.token_response import TokenResponseDTO
 from app.services.auth_service import AuthService
 
 
 class AuthController:
-    """Controller handling HTTP-level orchestration for authentication endpoints.
+    """Controller component responsible for handling authentication-related HTTP requests and responses.
 
     Attributes:
-        _service (AuthService): The authentication domain service instance.
+        _service (AuthService): Service instance providing core authentication business logic.
     """
 
     def __init__(self, service: AuthService) -> None:
-        """Initializes the controller with the authentication service dependency.
+        """Initializes the authentication controller with an auth service instance.
 
         Args:
-            service (AuthService): The authentication domain service instance.
+            service (AuthService): The service layer dependency for authentication operations.
         """
         self._service = service
 
-    def authenticate_user(self, data: LoginDTO) -> UserModel:
-        """Orchestrates authentication request data processing and delegates to the service layer.
+    def authenticate_user(self, data: LoginDTO) -> TokenResponseDTO:
+        """Handles the HTTP request to authenticate a user and issue access tokens.
 
         Args:
-            data (LoginDTO): The validated login data transfer object.
+            data (LoginDTO): Data transfer object containing the user's login credentials.
 
         Returns:
-            UserModel: The authenticated user entity instance.
-
-        Raises:
-            UserNotFoundError: If authentication credentials are invalid or user is not found.
+            TokenResponseDTO: Response DTO containing the issued access token and type.
         """
         return self._service.authenticate_user(data)

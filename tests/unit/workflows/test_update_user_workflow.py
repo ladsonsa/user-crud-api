@@ -101,6 +101,7 @@ def test_update_user_success() -> None:
     result = workflow.execute(
         1,
         UserUpdateDTO(name="Alice Smith", email="alice.smith@example.com"),
+        user,
     )
 
     assert result.name == "Alice Smith"
@@ -111,6 +112,11 @@ def test_update_user_not_found() -> None:
     """Tests that UpdateUserWorkflow raises UserNotFoundError when the target user does not exist."""
     workflow = UpdateUserWorkflow(FakeUserRepository())
 
+    user = UserModel(
+        name="Carls",
+        email="carls@example.com",
+        password_hash=hash_password("SecurePassword123"),
+    )
     with pytest.raises(UserNotFoundError):
         workflow.execute(
             999,
@@ -118,6 +124,7 @@ def test_update_user_not_found() -> None:
                 name="Test",
                 email="test@example.com",
             ),
+            user,
         )
 
 
@@ -150,4 +157,5 @@ def test_update_user_duplicate_email() -> None:
                 name="Bob",
                 email="alice@example.com",
             ),
+            second,
         )

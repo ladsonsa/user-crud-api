@@ -1,26 +1,17 @@
 # User CRUD API
 
 <p align="left">
-
   <img src="https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white" alt="Python 3.14">
-
   <img src="https://img.shields.io/badge/FastAPI-009688?logo=fastapi&logoColor=white" alt="FastAPI">
-
   <img src="https://img.shields.io/badge/SQLAlchemy-D71F00?logo=sqlalchemy&logoColor=white" alt="SQLAlchemy">
-
   <img src="https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL 17">
-
   <img src="https://img.shields.io/badge/Docker-2496ED?logo=docker&logoColor=white" alt="Docker">
-
   <img src="https://img.shields.io/badge/pytest-0A9EDC?logo=pytest&logoColor=white" alt="pytest">
-
   <img src="https://img.shields.io/badge/GitHub_Actions-2088FF?logo=githubactions&logoColor=white" alt="GitHub Actions">
-
   <img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License">
-
 </p>
 
-> Backend REST API for user management, built with FastAPI, SQLAlchemy and PostgreSQL, featuring layered architecture, Dependency Injection, JWT authentication, ownership-based authorization, automated testing, Docker and CI/CD.
+> Layered REST API for user management, built with FastAPI, SQLAlchemy and PostgreSQL, featuring Dependency Injection, JWT authentication, ownership-based authorization, automated testing, Docker and CI.
 
 ## About the Project
 
@@ -48,7 +39,7 @@ The application implements the complete user CRUD lifecycle with request validat
 * JWT authentication with Bearer tokens
 * Secure password hashing using Argon2 through `pwdlib`
 * Ownership validation for individual user operations
-* Unit and integration test suites with minimum 80% coverage
+* Unit and integration test suites with an enforced 80% coverage threshold
 * Automated quality gates through GitHub Actions
 * Dockerized FastAPI and PostgreSQL environment
 
@@ -273,7 +264,7 @@ JWT_ALGORITHM
 JWT_ACCESS_TOKEN_EXPIRE_MINUTES
 ```
 
-Use a strong secret key for `JWT_SECRET_KEY`.
+Use a strong secret key with at least 32 characters for `JWT_SECRET_KEY`.
 
 > Do not commit `.env` files or real credentials to the repository.
 
@@ -393,6 +384,7 @@ The current CI workflow runs on:
 
 * Pushes to `dev`
 * Pull requests targeting `dev`
+* Pull requests targeting `main`
 
 ### CI Pipeline
 
